@@ -1,0 +1,41 @@
+[
+  {
+    "question": "What database extension stores the embeddings?",
+    "must_contain": ["pgvector"],
+    "source_hint": "about-askdocs"
+  },
+  {
+    "question": "How many dimensions do the embeddings have?",
+    "must_contain": ["1536"],
+    "source_hint": "about-askdocs"
+  },
+  {
+    "question": "What happens when I re-ingest a file that did not change?",
+    "must_contain": ["no-op"],
+    "source_hint": "about-askdocs"
+  },
+  {
+    "question": "What kind of vector index is used and why?",
+    "must_contain": ["HNSW"],
+    "source_hint": "about-askdocs"
+  },
+  {
+    "question": "What is the similarity cutoff for retrieved chunks?",
+    "must_contain": ["0.2"],
+    "source_hint": "about-askdocs"
+  },
+  {
+    "question": "Which providers can supply the embeddings?",
+    "must_contain": ["Gemini", "OpenAI"],
+    "source_hint": "about-askdocs"
+  },
+  {
+    "question": "Why is splitting text mid-sentence a problem?",
+    "must_contain": ["retrieval"],
+    "source_hint": "about-askdocs"
+  },
+  {
+    "question": "What is the capital of France?",
+    "expect_refusal": true
+  }
+]

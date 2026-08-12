@@ -11,7 +11,9 @@
     "test": "node --experimental-strip-types --test test/*.test.ts",
     "ingest": "tsx src/ingest.ts",
     "ask": "tsx src/ask.ts",
-    "serve": "tsx src/server.ts"
+    "serve": "tsx src/server.ts",
+    "stats": "tsx src/stats.ts",
+    "eval": "tsx src/eval.ts"
   },
   "keywords": [],
   "author": "",

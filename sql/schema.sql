@@ -20,3 +20,21 @@ CREATE TABLE IF NOT EXISTS chunks (
 -- HNSW gives good recall without tuning lists like ivfflat requires.
 CREATE INDEX IF NOT EXISTS chunks_embedding_idx
   ON chunks USING hnsw (embedding vector_cosine_ops);
+
+-- One row per ask(): the observability spine. Cost and latency per stage,
+-- so quality regressions and cost creep show up in a query, not in vibes.
+CREATE TABLE IF NOT EXISTS traces (
+  id                BIGSERIAL PRIMARY KEY,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  question          TEXT NOT NULL,
+  embed_ms          INT NOT NULL,
+  search_ms         INT NOT NULL,
+  chat_ms           INT NOT NULL,
+  total_ms          INT NOT NULL,
+  hits              INT NOT NULL,
+  top_similarity    REAL,
+  prompt_tokens     INT,
+  completion_tokens INT,
+  cost_usd          NUMERIC(10, 6),
+  model             TEXT NOT NULL
+);

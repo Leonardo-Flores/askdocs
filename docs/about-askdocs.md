@@ -44,6 +44,25 @@ npm run serve
 curl -s localhost:8787/ask -d '{"question": "how are chunks stored?"}'
 ```
 
+## Evals and observability
+
+"It seems to work" is not a metric. Two commands turn vibes into numbers:
+
+```sh
+npm run eval    # golden set: retrieval recall, string checks, LLM-as-judge
+npm run stats   # traces: latency avg/p95, retrieval health, total spend
+```
+
+Every `ask` writes a trace row (latency per stage, tokens, cost in USD, top similarity), so cost creep and quality regressions show up in a query.
+
+The eval harness scores each golden case three ways, because none is enough alone:
+
+- **retrieval recall@6**: did the expected document reach the top-k at all? If retrieval fails, nothing downstream can save the answer.
+- **string checks**: does the answer literally contain the expected facts? Cheap, fast, catches regressions.
+- **LLM-as-judge**: a second model call with **structured output** (strict JSON schema) grades whether the answer is grounded in the passages and actually answers the question. Catches paraphrase and hallucination that string checks miss.
+
+There is also a refusal case ("capital of France") asserting the system says "not in the documents" instead of improvising. `npm run eval` exits non-zero on judge failures, so it can gate CI.
+
 ## Tests
 
 ```sh
@@ -59,7 +78,9 @@ src/chunk.ts    paragraph-aware chunking (pure, tested)
 src/embed.ts    embeddings + chat, Gemini or OpenAI, batched
 src/ingest.ts   files -> chunks -> embeddings -> Postgres
 src/search.ts   cosine top-k over pgvector
-src/ask.ts      retrieval + chat completion with citations (CLI)
+src/ask.ts      retrieval + chat completion with citations, traced (CLI)
 src/server.ts   POST /ask (Hono)
-sql/schema.sql  documents, chunks, HNSW index
+src/eval.ts     golden-set eval: recall, string checks, LLM-as-judge
+src/stats.ts    latency/cost/retrieval aggregates from traces
+sql/schema.sql  documents, chunks, HNSW index, traces
 ```

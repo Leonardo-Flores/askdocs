@@ -10,8 +10,10 @@ export interface Hit {
 
 // Cosine distance (<=>) is what the HNSW index was built for; similarity is
 // just 1 - distance, easier to reason about when tuning the cutoff.
-export async function search(query: string, k = 5): Promise<Hit[]> {
-  const embedding = await embedOne(query);
+export async function searchByEmbedding(
+  embedding: number[],
+  k = 5,
+): Promise<Hit[]> {
   const res = await pool.query(
     `SELECT d.path, c.ordinal, c.content,
             1 - (c.embedding <=> $1::vector) AS similarity
@@ -22,4 +24,8 @@ export async function search(query: string, k = 5): Promise<Hit[]> {
     [toVectorLiteral(embedding), k],
   );
   return res.rows;
+}
+
+export async function search(query: string, k = 5): Promise<Hit[]> {
+  return searchByEmbedding(await embedOne(query), k);
 }
