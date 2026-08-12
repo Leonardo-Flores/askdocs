@@ -1,0 +1,32 @@
+{
+  "name": "askdocs",
+  "version": "0.1.0",
+  "description": "RAG over your own documents: OpenAI embeddings, pgvector, cited answers. No frameworks.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node --experimental-strip-types --test test/*.test.ts",
+    "ingest": "tsx src/ingest.ts",
+    "ask": "tsx src/ask.ts",
+    "serve": "tsx src/server.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@hono/node-server": "^2.1.0",
+    "hono": "^4.13.1",
+    "openai": "^7.4.0",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@types/pg": "^8.21.0",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2"
+  }
+}
