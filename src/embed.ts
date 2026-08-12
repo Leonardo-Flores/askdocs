@@ -33,7 +33,9 @@ export function costUsd(usage: ChatUsage, model = CHAT_MODEL): number {
 
 let _openai: OpenAI | null = null;
 function openaiClient(): OpenAI {
-  return (_openai ??= new OpenAI());
+  // Generous retries and a shorter per-attempt timeout: on a flaky
+  // connection, failing fast and retrying beats hanging for minutes.
+  return (_openai ??= new OpenAI({ timeout: 60_000, maxRetries: 5 }));
 }
 
 export async function embedMany(texts: string[]): Promise<number[][]> {
