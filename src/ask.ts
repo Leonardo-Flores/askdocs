@@ -3,10 +3,9 @@
 // hand them to the chat model and print an answer with numbered sources.
 
 import { pool } from "./db.ts";
-import { openai } from "./embed.ts";
+import { chatAnswer } from "./embed.ts";
 import { search, type Hit } from "./search.ts";
 
-const CHAT_MODEL = process.env.ASKDOCS_MODEL ?? "gpt-4o-mini";
 const MIN_SIMILARITY = 0.2;
 
 export async function ask(question: string): Promise<{ answer: string; sources: Hit[] }> {
@@ -21,20 +20,13 @@ export async function ask(question: string): Promise<{ answer: string; sources: 
     .map((h, i) => `[${i + 1}] (${h.path}#${h.ordinal})\n${h.content}`)
     .join("\n\n---\n\n");
 
-  const res = await openai.chat.completions.create({
-    model: CHAT_MODEL,
-    messages: [
-      {
-        role: "system",
-        content:
-          "Answer using ONLY the provided passages. Cite passages inline as [1], [2]. " +
-          "If the passages do not contain the answer, say so plainly. Answer in the language of the question.",
-      },
-      { role: "user", content: `Passages:\n\n${context}\n\nQuestion: ${question}` },
-    ],
-  });
+  const answer = await chatAnswer(
+    "Answer using ONLY the provided passages. Cite passages inline as [1], [2]. " +
+      "If the passages do not contain the answer, say so plainly. Answer in the language of the question.",
+    `Passages:\n\n${context}\n\nQuestion: ${question}`,
+  );
 
-  return { answer: res.choices[0].message.content ?? "", sources: hits };
+  return { answer, sources: hits };
 }
 
 if (process.argv[1]?.endsWith("ask.ts")) {

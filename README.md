@@ -21,13 +21,18 @@ Design choices, since the point of this repo is understanding the pieces:
 
 ## Running it
 
-Needs Node 22+, Docker and an `OPENAI_API_KEY`.
+Needs Node 22+, Docker and one API key. Either provider handles both embeddings and chat:
+
+- `GEMINI_API_KEY`: free tier, no credit card (aistudio.google.com/apikey)
+- `OPENAI_API_KEY`: what most job specs name
+
+Anthropic is not an option on purpose: Claude has no embeddings endpoint, and RAG needs one.
 
 ```sh
 docker compose up -d          # Postgres 16 + pgvector, schema auto-applied
 npm install
 
-export OPENAI_API_KEY=sk-...
+export GEMINI_API_KEY=...     # or OPENAI_API_KEY=sk-...
 npm run ingest -- ./docs      # or any folder with .md/.txt files
 npm run ask -- "what does the ingest pipeline do?"
 ```
@@ -51,7 +56,7 @@ Unit tests cover the chunker, which is the only part with real logic worth testi
 
 ```
 src/chunk.ts    paragraph-aware chunking (pure, tested)
-src/embed.ts    OpenAI embeddings, batched
+src/embed.ts    embeddings + chat, Gemini or OpenAI, batched
 src/ingest.ts   files -> chunks -> embeddings -> Postgres
 src/search.ts   cosine top-k over pgvector
 src/ask.ts      retrieval + chat completion with citations (CLI)
