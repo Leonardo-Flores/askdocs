@@ -1,9 +1,14 @@
-// Tiny HTTP wrapper around ask(): POST /ask {"question": "..."}
+// Tiny HTTP wrapper around ask(): POST /ask {"question": "..."},
+// plus a one-page chat UI at / (public/index.html).
+import { readFile } from "node:fs/promises";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { ask } from "./ask.ts";
 
 const app = new Hono();
+
+const page = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
+app.get("/", (c) => c.html(page));
 
 app.get("/health", (c) => c.json({ ok: true }));
 

@@ -37,10 +37,9 @@ npm run ingest -- ./docs      # or any folder with .md/.txt files
 npm run ask -- "what does the ingest pipeline do?"
 ```
 
-Or as an HTTP API:
+Or in the browser: `npm run serve` and open http://localhost:8787 for a small chat UI (Catppuccin Mocha, of course) that shows the cited sources and the trace (latency, tokens, cost) under every answer. The same endpoint works headless:
 
 ```sh
-npm run serve
 curl -s localhost:8787/ask -d '{"question": "how are chunks stored?"}'
 ```
 
@@ -79,7 +78,7 @@ src/embed.ts    embeddings + chat, Gemini or OpenAI, batched
 src/ingest.ts   files -> chunks -> embeddings -> Postgres
 src/search.ts   cosine top-k over pgvector
 src/ask.ts      retrieval + chat completion with citations, traced (CLI)
-src/server.ts   POST /ask (Hono)
+src/server.ts   chat UI + POST /ask (Hono)
 src/eval.ts     golden-set eval: recall, string checks, LLM-as-judge
 src/stats.ts    latency/cost/retrieval aggregates from traces
 sql/schema.sql  documents, chunks, HNSW index, traces

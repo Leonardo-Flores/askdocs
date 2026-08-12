@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>askdocs</title>
+<style>
+  /* Catppuccin Mocha */
+  :root {
+    --base: #1e1e2e; --mantle: #181825; --surface: #313244;
+    --text: #cdd6f4; --subtext: #a6adc8; --overlay: #6c7086;
+    --mauve: #cba6f7; --blue: #89b4fa; --green: #a6e3a1;
+    --red: #f38ba8; --peach: #fab387;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--base); color: var(--text);
+    font: 15px/1.6 "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 3rem 1rem;
+  }
+  main { width: 100%; max-width: 46rem; }
+  h1 { font-size: 1.2rem; font-weight: 600; }
+  h1 .prompt { color: var(--green); }
+  h1 .name { color: var(--mauve); }
+  .tag { color: var(--overlay); font-size: 0.85rem; margin-bottom: 2rem; }
+  form { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+  input {
+    flex: 1; background: var(--mantle); color: var(--text);
+    border: 1px solid var(--surface); border-radius: 6px;
+    padding: 0.65rem 0.9rem; font: inherit; outline: none;
+  }
+  input:focus { border-color: var(--mauve); }
+  button {
+    background: var(--mauve); color: var(--mantle); border: 0; border-radius: 6px;
+    padding: 0.65rem 1.1rem; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  button:disabled { opacity: 0.5; cursor: wait; }
+  .answer {
+    background: var(--mantle); border: 1px solid var(--surface); border-radius: 8px;
+    padding: 1rem 1.2rem; white-space: pre-wrap; display: none; margin-bottom: 1rem;
+  }
+  .answer.error { border-color: var(--red); color: var(--red); }
+  .sources { display: none; margin-bottom: 1rem; }
+  .sources div { color: var(--subtext); font-size: 0.82rem; }
+  .sources .n { color: var(--blue); }
+  .sources .sim { color: var(--overlay); }
+  .trace { display: none; color: var(--overlay); font-size: 0.8rem; border-top: 1px dashed var(--surface); padding-top: 0.8rem; }
+  .trace b { color: var(--peach); font-weight: 500; }
+  footer { margin-top: auto; padding-top: 3rem; color: var(--overlay); font-size: 0.78rem; }
+  footer a { color: var(--blue); text-decoration: none; }
+</style>
+</head>
+<body>
+<main>
+  <h1><span class="prompt">leo@askdocs:~$</span> <span class="name">ask</span></h1>
+  <p class="tag">RAG over your documents · answers cite their sources · every call is traced</p>
+
+  <form id="f">
+    <input id="q" placeholder="ask something about the ingested documents…" autocomplete="off" autofocus />
+    <button id="go">ask</button>
+  </form>
+
+  <div class="answer" id="answer"></div>
+  <div class="sources" id="sources"></div>
+  <div class="trace" id="trace"></div>
+
+  <footer>hand-rolled RAG: OpenAI/Gemini embeddings · pgvector · <a href="https://github.com/Leonardo-Flores/askdocs">github.com/Leonardo-Flores/askdocs</a></footer>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+  $("f").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const question = $("q").value.trim();
+    if (!question) return;
+    $("go").disabled = true;
+    $("answer").style.display = "block";
+    $("answer").className = "answer";
+    $("answer").textContent = "thinking…";
+    $("sources").style.display = "none";
+    $("trace").style.display = "none";
+    try {
+      const res = await fetch("/ask", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const { answer, sources, trace } = await res.json();
+      $("answer").textContent = answer;
+      if (sources.length) {
+        $("sources").style.display = "block";
+        $("sources").innerHTML = sources
+          .map((s, i) =>
+            `<div><span class="n">[${i + 1}]</span> ${esc(s.path.split("/").pop())}#${s.ordinal} ` +
+            `<span class="sim">similarity ${s.similarity.toFixed(3)}</span></div>`)
+          .join("");
+      }
+      $("trace").style.display = "block";
+      $("trace").innerHTML =
+        `trace · total <b>${trace.totalMs}ms</b> (embed ${trace.embedMs} / search ${trace.searchMs} / chat ${trace.chatMs})` +
+        ` · ${trace.promptTokens}+${trace.completionTokens} tok · <b>$${trace.costUsd.toFixed(6)}</b> · ${trace.model}`;
+    } catch (err) {
+      $("answer").className = "answer error";
+      $("answer").textContent = String(err);
+    } finally {
+      $("go").disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
